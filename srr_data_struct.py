@@ -158,15 +158,16 @@ def write_json(general_list):
 
             if isinstance(tup[1], bool):
             
-                to_write += "'" + tup[0] + "'" + ':' + str(tup[1]) + ',\n'
+                to_write += '"' + tup[0] + '"' + ':' + str(tup[1]).lower() + ',\n'
 
             elif isinstance(tup[1], list):
-            
-                to_write += "'" + tup[0] + "'" + ':' + str(tup[1]) + ',\n'
+
+                lista = ['"'+ x +'"' for x in tup[1]]
+                to_write += '"' + tup[0] + '"' + ': [' + ",".join(lista) + '],\n'
             
             else:
 
-                to_write += "'" + tup[0] + "'" + ':' + "'" + tup[1] + "'" + ',\n'
+                to_write += '"' + tup[0] + '"' + ':' + '"' + tup[1] + '"' + ',\n'
 
         to_write += '}'
         to_write = to_write.replace(',\n}','\n}')
