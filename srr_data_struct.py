@@ -98,7 +98,7 @@ def create_json_struc(final_dict, list_json_stand, dict_ip_srr, list_ctrl_srr):
         for tup in v:
             partial_list.append(tup)
         
-        ip_path = v[0][1][0]
+        ip_path = v[0][1][0] #first path of each IP sample in case of more than one technical replicate
         srr_ip = os.path.basename(ip_path).split('_')[0]
         srr_ctl = final_dict[srr_ip]
              
