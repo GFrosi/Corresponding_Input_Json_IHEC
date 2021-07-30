@@ -1,0 +1,7 @@
+#certifi
+#configparser
+numpy
+pandas
+python-dateutil
+pytz
+six
