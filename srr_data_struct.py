@@ -3,6 +3,7 @@ import sys
 import argparse
 import json
 import os
+from pprint import pprint
 
 
 def data_parse(file_n):
@@ -86,30 +87,32 @@ def open_json(file_n):
         return json_full
        
 
-def create_json_struc(final_dict, list_json_stand, list_ip_ssr, list_ctrl_srr):
+def create_json_struc(final_dict, list_json_stand, dict_ip_srr, list_ctrl_srr):
 
     '''receives a dict and three lists. Returns a list of list of tuples with the IP sample from the json file and 
     the correspondent inputs'''
 
     general_list = []
-
-    for ip in list_ip_ssr:
+    for k,v in dict_ip_srr.items():
         partial_list = list_json_stand.copy()
-        partial_list.append(ip)
-
-        for ip_path in ip[1]:
-            srr_ip = os.path.basename(ip_path).split('_')[0]
-            srr_ctl = final_dict[srr_ip]
+        for tup in v:
+            partial_list.append(tup)
+        
+        ip_path = v[0][1][0]
+        srr_ip = os.path.basename(ip_path).split('_')[0]
+        srr_ctl = final_dict[srr_ip]
              
-            for ctrl in list_ctrl_srr:
-                for ctrl_path in ctrl[1]:
-                    
-                    if  os.path.basename(ctrl_path).split('_')[0] in srr_ctl:
-                        partial_list.append(ctrl)
+        for ctrl in list_ctrl_srr:
+            for ctrl_path in ctrl[1]:
+                   
+                if  os.path.basename(ctrl_path).split('_')[0] in srr_ctl:
+                    partial_list.append(ctrl)
         
         general_list.append(partial_list)
     
+    
     return general_list
+ 
 
 
 def play_json(json_full, final_dict):
@@ -118,8 +121,10 @@ def play_json(json_full, final_dict):
     The second one with the IP samples information (key and values), and the third one with the control information'''
 
     list_json_stand = []
-    list_ip_ssr = []
+    
     list_ctrl_srr = []
+
+    dict_ip_srr = {}
 
     list_keys_stand = ['chip.always_use_pooled_ctl','chip.genome_tsv',
     'chip.paired_end','chip.ctl_paired_end','chip.pipeline_type',
@@ -131,12 +136,19 @@ def play_json(json_full, final_dict):
             list_json_stand.append((k,v))
 
         if 'chip.fastqs' in k:
-            list_ip_ssr.append((k,v))
+            rep = k.split('_')[1]
+            if rep in dict_ip_srr.keys():
+                dict_ip_srr[rep].append((k,v))
+            else:
+                dict_ip_srr[rep] = [(k,v)]
 
         if 'chip.ctl_fastqs' in k:
             list_ctrl_srr.append((k,v))
 
-    return create_json_struc(final_dict, list_json_stand, list_ip_ssr, list_ctrl_srr)   
+    # pprint(dict_ip_srr)
+    # print(dict_ip_srr['rep1'][0][1])
+    # sys.exit()
+    return create_json_struc(final_dict, list_json_stand, dict_ip_srr, list_ctrl_srr)   
 
 
 def write_json(general_list):
