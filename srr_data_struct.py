@@ -133,10 +133,10 @@ def play_json(json_full, final_dict):
     for k,v in json_full.items():  
         
         if k in list_keys_stand:
-            list_json_stand.append((k,v))
+            list_json_stand.append((k,v)) #fixed information
 
         if 'chip.fastqs' in k:
-            rep = k.split('_')[1]
+            rep = k.split('_')[1] #get just SRR 
             if rep in dict_ip_srr.keys():
                 dict_ip_srr[rep].append((k,v))
             else:
@@ -145,9 +145,7 @@ def play_json(json_full, final_dict):
         if 'chip.ctl_fastqs' in k:
             list_ctrl_srr.append((k,v))
 
-    # pprint(dict_ip_srr)
-    # print(dict_ip_srr['rep1'][0][1])
-    # sys.exit()
+
     return create_json_struc(final_dict, list_json_stand, dict_ip_srr, list_ctrl_srr)   
 
 
