@@ -65,7 +65,6 @@ def build_dict(dict_srr_IP, dict_gsm_srr_ctrl):
 
     for k,v in dict_srr_IP.items():
         for val in v:
-    
             if k not in final_dict.keys():
                 final_dict[k] = [dict_gsm_srr_ctrl[val]] #SRR from IP as key and SRR from GSEM cctrl as value
             
@@ -88,28 +87,46 @@ def open_json(file_n):
        
 
 def create_json_struc(final_dict, list_json_stand, dict_ip_srr, list_ctrl_srr):
-
-    '''receives a dict and three lists. Returns a list of list of tuples with the IP sample from the json file and 
-    the correspondent inputs'''
+    '''receives a dict and three lists. Returns a list of list of tuples with 
+    the IP sample from the json file and the correspondent inputs
+    '''
 
     general_list = []
+    ctrl_str_r1 = 'chip.ctl_fastqs_rep1_R1' #stand the key name for the json file (all rep 1)
+    ctrl_str_r2 = 'chip.ctl_fastqs_rep1_R2' #stand the key name for the json file (all rep 1)
+
     for k,v in dict_ip_srr.items():
+        ctrl_dict_rep = {'R1': [], 'R2': [] }
         partial_list = list_json_stand.copy()
         for tup in v:
-            partial_list.append(tup)
-        
+            tup = list(tup) #  convert to list to modify rep2, rep3 into rep1
+            rep1 = 'rep1'
+            rep = tup[0].split('_') #splitinng key name chip.fasta_rep5_R1
+            rep[1] = rep1 #replacing other rep2, rep3, ... by rep1 string
+            tup[0] = "_".join(rep)
+            tup = tuple(tup) #stand the IP key for the json file (all rep 1)
+            partial_list.append(tup) #IP 
+    
         ip_path = v[0][1][0] #first path of each IP sample in case of more than one technical replicate
-        srr_ip = os.path.basename(ip_path).split('_')[0]
-        srr_ctl = final_dict[srr_ip]
+        srr_ip = os.path.basename(ip_path).split('_')[0] #gettin SRR IP
+        srr_ctl = final_dict[srr_ip] #find cctrl for each IP 
              
         for ctrl in list_ctrl_srr:
             for ctrl_path in ctrl[1]:
-                   
                 if  os.path.basename(ctrl_path).split('_')[0] in srr_ctl:
-                    partial_list.append(ctrl)
+                    if 'R1' in ctrl[0]:
+                        ctrl_dict_rep['R1'].append(ctrl_path)
+                    else: 
+                        ctrl_dict_rep['R2'].append(ctrl_path)
+   
+        r1_tup  = (ctrl_str_r1, ctrl_dict_rep['R1'])
+        partial_list.append(r1_tup)
         
+        if len(ctrl_dict_rep['R2']) > 0:
+            r2_tup  = (ctrl_str_r2, ctrl_dict_rep['R2'])
+            partial_list.append(r2_tup)
+
         general_list.append(partial_list)
-    
     
     return general_list
  
@@ -130,8 +147,7 @@ def play_json(json_full, final_dict):
     'chip.paired_end','chip.ctl_paired_end','chip.pipeline_type',
     'chip.aligner','chip.title','chip.description']
 
-    for k,v in json_full.items():  
-        
+    for k,v in json_full.items():         
         if k in list_keys_stand:
             list_json_stand.append((k,v)) #fixed information
 
