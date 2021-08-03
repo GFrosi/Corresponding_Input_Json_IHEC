@@ -7,46 +7,32 @@ from pprint import pprint
 
 
 def data_parse(file_n):
-
-    '''receives a table and returns two dicts. The first one has the SRR related with each IP samples as keys and 
-    a list of GSM of corresponding controls. The second ones has the GSM of each Input sample as keys and a list of their
-    SRR as values.'''
+    '''Receives a table and returns two dicts. 
+    The first one has the SRR related with each 
+    IP samples as keys and a list of GSM of corresponding
+    controls. The second ones has the GSM of each Input sample 
+    as keys and a list of their SRR as values.'''
     
     file_hist = open(file_n, 'r')
-
     dict_srr_IP = {}
-    
     dict_gsm_srr_ctrl = {}
     
     for i,line in enumerate(file_hist):
-
-        
         if i == 0: #removing the header line
-        
             continue
         
-        
         line = line.strip()
-
         splited_table = line.split('\t')[1:] #removing index column; file separated by TAB
-        
         splited_table[-2] = splited_table[-2].replace('"', '') #replacing "" by nothing; Corresponding Control column
-
         splited_table[-4] = splited_table[-4].replace('"', '') #SRR column
 
-        
         if splited_table[-2] != 'NA': #removing inputs
-            
             srr_ip = splited_table[-4].split(',')[0] #geeting just the first SRR (in this case, the first technical replicate to filter json)
-            
             gsm_ctrl = splited_table[-2].split(',')
-
             dict_srr_IP[srr_ip] = gsm_ctrl
 
         else:
-
             srr_ctl = splited_table[-4].split(',')[0]
-            
             dict_gsm_srr_ctrl[splited_table[7]] = srr_ctl #getting each GSM cctrl from GSM column (individualy)
 
             
@@ -57,9 +43,10 @@ def data_parse(file_n):
 
 
 def build_dict(dict_srr_IP, dict_gsm_srr_ctrl):
-
-    '''Receives two dicts and returns a final dict where the keys are the SRR of each IP samples, and the value
-    is a list of SRR of their corresponding controls'''
+    '''Receives two dicts and returns a final dict 
+    where the keys are the SRR of each IP samples, and the value
+    is a list of SRR of their corresponding controls
+    '''
 
     final_dict = {}
 
@@ -76,11 +63,9 @@ def build_dict(dict_srr_IP, dict_gsm_srr_ctrl):
 
 
 def open_json(file_n):
-
     '''load the json file'''
 
     with open(file_n) as f:
-        
         json_full = json.load(f)
         
         return json_full
@@ -138,9 +123,7 @@ def play_json(json_full, final_dict):
     The second one with the IP samples information (key and values), and the third one with the control information'''
 
     list_json_stand = []
-    
     list_ctrl_srr = []
-
     dict_ip_srr = {}
 
     list_keys_stand = ['chip.always_use_pooled_ctl','chip.genome_tsv',
@@ -170,37 +153,25 @@ def write_json(general_list):
     ctn = 0
     
     for sublist in general_list:
-
         ctn+=1
-
         json_name = 'json_'+ str(ctn) + '.json'
-
         output = open(json_name, 'w')
-
         to_write = '{\n'
 
         for tup in sublist:
-
-
             if isinstance(tup[1], bool):
-            
                 to_write += '"' + tup[0] + '"' + ':' + str(tup[1]).lower() + ',\n'
 
             elif isinstance(tup[1], list):
-
                 lista = ['"'+ x +'"' for x in tup[1]]
                 to_write += '"' + tup[0] + '"' + ': [' + ",".join(lista) + '],\n'
             
             else:
-
                 to_write += '"' + tup[0] + '"' + ':' + '"' + tup[1] + '"' + ',\n'
 
         to_write += '}'
         to_write = to_write.replace(',\n}','\n}')
-        
-        
         output.write(to_write)
-
         output.close()
 
             
@@ -208,15 +179,10 @@ def write_json(general_list):
 def main():
 
     file_n = args.table
-    
     dict_srr_IP, dict_gsm_srr_ctrl = data_parse(file_n)
-    
     final_dict = build_dict(dict_srr_IP,dict_gsm_srr_ctrl)
-
     json_full = open_json(args.json)
-
     general_list = play_json(json_full, final_dict)
-
     write_json(general_list)
 
 
