@@ -148,14 +148,14 @@ def play_json(json_full, final_dict):
     return create_json_struc(final_dict, list_json_stand, dict_ip_srr, list_ctrl_srr)   
 
 
-def write_json(general_list):
+def write_json(general_list, root_dir):
 
     ctn = 0
     
     for sublist in general_list:
         ctn+=1
         json_name = 'json_'+ str(ctn) + '.json'
-        output = open(json_name, 'w')
+        output = open(os.path.join(root_dir, json_name), 'w')
         to_write = '{\n'
 
         for tup in sublist:
@@ -182,8 +182,9 @@ def main():
     dict_srr_IP, dict_gsm_srr_ctrl = data_parse(file_n)
     final_dict = build_dict(dict_srr_IP,dict_gsm_srr_ctrl)
     json_full = open_json(args.json)
+    root_dir  = os.path.dirname(args.json)
     general_list = play_json(json_full, final_dict)
-    write_json(general_list)
+    write_json(general_list, root_dir)
 
 
 
