@@ -27,7 +27,7 @@ def data_parse(file_n):
         splited_table[-4] = splited_table[-4].replace('"', '') #SRR column
 
         if splited_table[-2] != 'NA': #removing inputs
-            srr_ip = splited_table[-4].split(',')[0] #geeting just the first SRR (in this case, the first technical replicate to filter json)
+            srr_ip = splited_table[-4].split(',')[0] #getting just the first SRR (in this case, the first technical replicate to filter json)
             gsm_ctrl = splited_table[-2].split(',')
             dict_srr_IP[srr_ip] = gsm_ctrl
 
@@ -77,8 +77,9 @@ def create_json_struc(final_dict, list_json_stand, dict_ip_srr, list_ctrl_srr):
     '''
 
     general_list = []
-    ctrl_str_r1 = 'chip.ctl_fastqs_rep1_R1' #stand the key name for the json file (all rep 1)
-    ctrl_str_r2 = 'chip.ctl_fastqs_rep1_R2' #stand the key name for the json file (all rep 1)
+    ctrl_str_r1  = 'chip.ctl_fastqs_rep1_R1' #stand the key name for the json file (all rep 1)
+    ctrl_str_r2  = 'chip.ctl_fastqs_rep1_R2' #stand the key name for the json file (all rep 1)
+    
 
     for k,v in dict_ip_srr.items():
         ctrl_dict_rep = {'R1': [], 'R2': [] }
@@ -150,7 +151,9 @@ def play_json(json_full, final_dict):
 
 def write_json(general_list, root_dir):
 
-    ctn = 0
+    ctn          = 0
+    ctrl_paired  = 0 #paired end true or false
+    ip_paired    = 0 #paired end true or false 
     
     for sublist in general_list:
         ctn+=1
@@ -169,8 +172,22 @@ def write_json(general_list, root_dir):
             else:
                 to_write += '"' + tup[0] + '"' + ':' + '"' + tup[1] + '"' + ',\n'
 
+            if tup[0] in 'chip.fastqs_rep1_R2': #change to true - paired end key
+                ip_paired = 1
+            if tup[0] == 'chip.ctl_fastqs_rep1_R2': #change to true - paired end key
+                ctrl_paired = 1
+
+
         to_write += '}'
         to_write = to_write.replace(',\n}','\n}')
+        if ip_paired == 1:
+            to_write = to_write.replace('"chip.paired_end":false,', '"chip.paired_end":true,') #replacing false by true
+            ip_paired = 0
+        if ctrl_paired == 1:
+            to_write = to_write.replace('"chip.ctl_paired_end":false,', '"chip.ctl_paired_end":true,') #replacing false by true
+            ctrl_paired = 0
+
+
         output.write(to_write)
         output.close()
 
