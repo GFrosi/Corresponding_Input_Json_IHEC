@@ -7,7 +7,7 @@ def get_gse(df):
     '''receives a df with a column GSE
     and return a list of gse without duplicated terms'''
 
-    gse_list = list(set(df['GSE'].tolist()))
+    gse_list = list(set(df['GSE_GEO'].tolist()))
 
     with open('gse_IDs.txt', 'w') as output:
         gse_write = '\n'.join(map(str, gse_list))
@@ -38,7 +38,7 @@ def get_srr(df, gse_list):
         out_name = gse+'_srr'+'.txt'
         print(gse)
 
-        df_gse = df[df['GSE'].str.contains(gse)]
+        df_gse = df[df['GSE_GEO'].str.contains(gse)]
         srr_list = df_gse['SRR'].tolist()
         srr_list_split = [ele.split(',') for ele in srr_list] #ok, list of lists
         path_out = os.path.join(os.getcwd(), gse, out_name) #each GSE_SRR file to their correspondent dir
@@ -53,8 +53,8 @@ def get_srr(df, gse_list):
 
 def main():
 
-    df_gse = pd.read_csv(sys.argv[1]) #df with GSE and SRR columns
-    df = df_gse[df_gse['GSE'].notna()]
+    df_gse = pd.read_csv(sys.argv[1], sep="\t") #df with GSE and SRR columns
+    df = df_gse[df_gse['GSE_GEO'].notna()]
     gse_list = get_gse(df) 
     create_dir(gse_list)
     get_srr(df, gse_list)

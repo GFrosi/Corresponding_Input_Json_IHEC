@@ -2,13 +2,14 @@ import pandas as pd
 import sys
 import os
 import csv
+from tqdm import tqdm
 
 
 def read_csv(file_name):
     '''receives a file name 
-    separated by comma and return a df'''
+    separated by tab and return a df'''
 
-    df = pd.read_csv(file_name)
+    df = pd.read_csv(file_name, sep='\t')
 
     return df
 
@@ -25,6 +26,8 @@ def get_gsm(df_no_diff):
     list_gsm_split = [ele.strip().split(',') for ele in list_gsm]
     flat_list = [result  for l in list_gsm_split for result in l]
     final_list = list(set(flat_list))
+    
+    print(len(final_list))
     
     return final_list #1478
 
@@ -43,11 +46,11 @@ def create_dict_gse(final_list, df_complete): #to work to create a list of gsm (
         for i, row in df_complete.iterrows():
             if ele in row['GSM']:
                 # print(ele)
-                if row['GSE'] not in dict_gse.keys():
-                    dict_gse[row['GSE']] = [ele]
+                if row['GSE_GEO'] not in dict_gse.keys():
+                    dict_gse[row['GSE_GEO']] = [ele]
                 
                 else:
-                    dict_gse[row['GSE']].append(ele)
+                    dict_gse[row['GSE_GEO']].append(ele)
 
                 # print(dict_gse)
     return dict_gse
@@ -83,12 +86,12 @@ def create_srr_file(final_list, df_complete):
     the corresponding controls
      '''
 
-    for ele in final_list: #maybe add tqdm here to have a notion #ele is a gsm
+    for ele in tqdm(final_list): #maybe add tqdm here to have a notion #ele is a gsm
         for i, row in df_complete.iterrows():
             if ele in row['GSM']:       
-                out_name = row['GSE']+'_srr_cctrl'+'.txt'
-                path_out = os.path.join(os.getcwd(), row['GSE'], out_name) #each GSE_SRR_cctrl file to their correspondent dir
-                list_dir_files = os.listdir(os.path.join(os.getcwd(),row['GSE']))
+                out_name = row['GSE_GEO']+'_srr_cctrl'+'.txt'
+                path_out = os.path.join(os.getcwd(), row['GSE_GEO'], out_name) #each GSE_SRR_cctrl file to their correspondent dir
+                list_dir_files = os.listdir(os.path.join(os.getcwd(),row['GSE_GEO']))
                 
                 if out_name not in list_dir_files:
                     output = open(path_out, 'a')
@@ -98,7 +101,6 @@ def create_srr_file(final_list, df_complete):
                     
                     break
         
-                
                 else:      
                     output = open(path_out, "a")
                     srr_list = row['SRR'].split(',')
@@ -111,13 +113,15 @@ def create_srr_file(final_list, df_complete):
 
 def main():
 
-    df_no_diff = read_csv(sys.argv[1])
-    df_complete = read_csv(sys.argv[2])
+    print('Starting script...')
+    df_no_diff = read_csv(sys.argv[1]) #desired files
+    df_complete = read_csv(sys.argv[2]) #whole df to get cctrols
     final_list = get_gsm(df_no_diff)
     dict_gse = create_dict_gse(final_list,df_complete)
     # write_dict(dict_gse)
     check_dir_gse(dict_gse)
     create_srr_file(final_list, df_complete)
+    print('SRR files created!')
 
 
 
