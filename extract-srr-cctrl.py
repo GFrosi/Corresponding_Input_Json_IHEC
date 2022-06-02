@@ -26,8 +26,8 @@ def get_gsm(df_no_diff):
     list_gsm_split = [ele.strip().split(',') for ele in list_gsm]
     flat_list = [result  for l in list_gsm_split for result in l]
     final_list = list(set(flat_list))
-    
-    print(len(final_list))
+
+    print('Length sample list:',len(final_list))
     
     return final_list #1478
 
@@ -45,14 +45,12 @@ def create_dict_gse(final_list, df_complete): #to work to create a list of gsm (
     for ele in final_list:
         for i, row in df_complete.iterrows():
             if ele in row['GSM']:
-                # print(ele)
                 if row['GSE_GEO'] not in dict_gse.keys():
                     dict_gse[row['GSE_GEO']] = [ele]
                 
                 else:
                     dict_gse[row['GSE_GEO']].append(ele)
 
-                # print(dict_gse)
     return dict_gse
 
 
@@ -88,26 +86,31 @@ def create_srr_file(final_list, df_complete):
 
     for ele in tqdm(final_list): #maybe add tqdm here to have a notion #ele is a gsm
         for i, row in df_complete.iterrows():
-            if ele in row['GSM']:       
+            if ele in row['GSM']:      
                 out_name = row['GSE_GEO']+'_srr_cctrl'+'.txt'
+                print(out_name)
                 path_out = os.path.join(os.getcwd(), row['GSE_GEO'], out_name) #each GSE_SRR_cctrl file to their correspondent dir
                 list_dir_files = os.listdir(os.path.join(os.getcwd(),row['GSE_GEO']))
-                
-                if out_name not in list_dir_files:
-                    output = open(path_out, 'a')
-                    srr_list = row['SRR'].split(',')
-                    to_write = '\n'.join(srr_list) + "\n"  
-                    output.write(to_write)
+                with open(path_out,'a') as output:
+
+                    if out_name not in list_dir_files:
+                        output = open(path_out, 'a')
+                        srr_list = row['SRR'].split(',')
+                        new_srr_list = [ele.replace('"','') for ele in srr_list]
+                        # print(new_srr_list)
+                        to_write = '\n'.join(new_srr_list) + "\n"  
+                        output.write(to_write)
+                        
+                        break
+            
+                    else:      
+                        output = open(path_out, "a")
+                        srr_list = row['SRR'].split(',')
+                        new_srr_list = [ele.replace('"','') for ele in srr_list]
+                        # print(new_srr_list)
+                        to_write = '\n'.join(new_srr_list) + '\n'   
+                        output.write(to_write)
                     
-                    break
-        
-                else:      
-                    output = open(path_out, "a")
-                    srr_list = row['SRR'].split(',')
-                    to_write = '\n'.join(srr_list) + '\n'   
-                    output.write(to_write)
-        
-        output.close()
             
             
 

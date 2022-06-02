@@ -41,13 +41,17 @@ def get_srr(df, gse_list):
         df_gse = df[df['GSE_GEO'].str.contains(gse)]
         srr_list = df_gse['SRR'].tolist()
         srr_list_split = [ele.split(',') for ele in srr_list] #ok, list of lists
+        # srr_list_split = [ele.replace('"', '') for ele in srr_list_split]
         path_out = os.path.join(os.getcwd(), gse, out_name) #each GSE_SRR file to their correspondent dir
         output = open(path_out, 'w') 
-
+        
         for l in srr_list_split:
-            to_write = '\n'.join(l)+'\n'
+            # print(l)
+            new_l = [ele.replace('"','') for ele in l]
+            # print(new_l)
+            
+            to_write = '\n'.join(new_l)+'\n'
             output.write(to_write)
-
         output.close()
  
 
