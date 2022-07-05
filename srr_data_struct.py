@@ -24,15 +24,16 @@ def data_parse(file_n):
         line = line.strip()
         splited_table = line.split('\t')[1:] #removing index column; file separated by TAB
         splited_table[-2] = splited_table[-2].replace('"', '') #replacing "" by nothing; Corresponding Control column
-        splited_table[-4] = splited_table[-4].replace('"', '') #SRR column
+        # splited_table[-4] = splited_table[-4].replace('"', '') #SRR column
+        splited_table[19] = splited_table[19].replace('"', '') #SRR column (complete table including word dist and comparison db)
 
         if splited_table[-2] != 'NA': #removing inputs
-            srr_ip = splited_table[-4].split(',')[0] #getting just the first SRR (in this case, the first technical replicate to filter json)
+            srr_ip = splited_table[19].split(',')[0] #getting just the first SRR (in this case, the first technical replicate to filter json)
             gsm_ctrl = splited_table[-2].split(',')
             dict_srr_IP[srr_ip] = gsm_ctrl
 
         else:
-            srr_ctl = splited_table[-4].split(',')[0]
+            srr_ctl = splited_table[19].split(',')[0] #SRR column (complete table including word dist and comparison db)
             dict_gsm_srr_ctrl[splited_table[7]] = srr_ctl #getting each GSM cctrl from GSM column (individualy)
 
             
@@ -53,11 +54,10 @@ def build_dict(dict_srr_IP, dict_gsm_srr_ctrl):
     for k,v in dict_srr_IP.items():
         for val in v:
             if k not in final_dict.keys():
-                final_dict[k] = [dict_gsm_srr_ctrl[val]] #SRR from IP as key and SRR from GSEM cctrl as value
+                final_dict[k] = [dict_gsm_srr_ctrl[val]] #SRR from IP as key and SRR from GSM cctrl as value
             
             else: 
                 final_dict[k].append(dict_gsm_srr_ctrl[val])
-
 
     return final_dict
 
@@ -82,7 +82,7 @@ def create_json_struc(final_dict, list_json_stand, dict_ip_srr, list_ctrl_srr):
     
 
     for k,v in dict_ip_srr.items():
-        ctrl_dict_rep = {'R1': [], 'R2': [] }
+        ctrl_dict_rep = {'R1': '' , 'R2': '' }
         partial_list = list_json_stand.copy()
         for tup in v:
             tup = list(tup) #  convert to list to modify rep2, rep3 into rep1
@@ -97,14 +97,25 @@ def create_json_struc(final_dict, list_json_stand, dict_ip_srr, list_ctrl_srr):
         srr_ip = os.path.basename(ip_path).split('_')[0] #gettin SRR IP
         srr_ctl = final_dict[srr_ip] #find cctrl for each IP 
              
-        for ctrl in list_ctrl_srr:
+        for ctrl in list_ctrl_srr: #list 
+            # print(list_ctrl_srr)
             for ctrl_path in ctrl[1]:
-                if  os.path.basename(ctrl_path).split('_')[0] in srr_ctl:
+                # print('FROSI',ctrl[1])
+                # print('IS THIS CORRECT?',ctrl_path)
+                if  os.path.basename(ctrl_path).split('_')[0] in srr_ctl: #SRR5204795
                     if 'R1' in ctrl[0]:
-                        ctrl_dict_rep['R1'].append(ctrl_path)
+                        # ctrl_dict_rep['R1'].append(ctrl_path)
+                        # ctrl_dict_rep['R1'].append(ctrl[1])
+                        ctrl_dict_rep['R1'] = ctrl[1]
+
                     else: 
-                        ctrl_dict_rep['R2'].append(ctrl_path)
-   
+                        # ctrl_dict_rep['R2'].append(ctrl_path)
+                        # ctrl_dict_rep['R2'].append(ctrl[1])
+                        ctrl_dict_rep['R2'] = ctrl[1]
+
+
+        
+        
         r1_tup  = (ctrl_str_r1, ctrl_dict_rep['R1'])
         partial_list.append(r1_tup)
         
@@ -113,6 +124,8 @@ def create_json_struc(final_dict, list_json_stand, dict_ip_srr, list_ctrl_srr):
             partial_list.append(r2_tup)
 
         general_list.append(partial_list)
+    
+    # print(ctrl_dict_rep)
     
     return general_list
  
@@ -143,7 +156,7 @@ def play_json(json_full, final_dict):
                 dict_ip_srr[rep] = [(k,v)]
 
         if 'chip.ctl_fastqs' in k:
-            list_ctrl_srr.append((k,v))
+            list_ctrl_srr.append((k,v)) 
 
 
     return create_json_struc(final_dict, list_json_stand, dict_ip_srr, list_ctrl_srr)   
@@ -201,6 +214,7 @@ def main():
     json_full = open_json(args.json)
     root_dir  = os.path.dirname(args.json)
     general_list = play_json(json_full, final_dict)
+    # sys.exit()
     write_json(general_list, root_dir)
 
 
